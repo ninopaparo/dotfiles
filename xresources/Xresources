@@ -1,0 +1,4 @@
+XTerm*faceName: Cascadia Code
+xterm*faceSize: 12
+XTerm.vt100.scrollBar: false
+XTerm*selectToClipboard: true

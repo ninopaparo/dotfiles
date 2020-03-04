@@ -1,0 +1,52 @@
+window:
+  dimensions:
+    columns: 0
+    lines: 0
+  padding:
+    x: 8
+    y: 8
+  dynamic_padding: false
+  decorations: none
+  startup_mode: Windowed
+scrolling:
+  history: 10000
+  multiplier: 3
+font:
+  normal:
+    family: "JetBrains Mono"
+    size: 10.0
+  offset:
+    x: 0
+    y: 0
+  glyph_offset:
+    x: 0
+    y: 0
+  use_thin_strokes: true
+draw_bold_text_with_bright_colors: true
+# Colors (Nord)
+colors:
+   primary:
+     background: '#2E3440'
+     foreground: '#D8DEE9'
+   normal:
+     black:   '#3B4252'
+     red:     '#BF616A'
+     green:   '#A3BE8C'
+     yellow:  '#EBCB8B'
+     blue:    '#81A1C1'
+     magenta: '#B48EAD'
+     cyan:    '#88C0D0'
+     white:   '#E5E9F0'
+   bright:
+     black:   '#4C566A'
+     red:     '#BF616A'
+     green:   '#A3BE8C'
+     yellow:  '#EBCB8B'
+     blue:    '#81A1C1'
+     magenta: '#B48EAD'
+     cyan:    '#8FBCBB'
+     white:   '#ECEFF4'  # Default colors
+     dim_foreground:    '0xdbdbdb'
+     bright_foreground: '0xd9d9d9'
+     dim_background:    '0x202020' # not sure
+     bright_background: '0x3a3a3a' # not sure
