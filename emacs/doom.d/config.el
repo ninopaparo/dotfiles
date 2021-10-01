@@ -1,86 +1,96 @@
 ;;; $DOOMDIR/config.el -*- lexical-binding: t; -*-
 
-(setq user-full-name "Nino Paparo"
+(setq user-full-name ""
       user-mail-address "")
 
-(setq doom-font (font-spec :family "JetBrains Mono" :size 16 :weight 'semi-light))
-(setq doom-theme 'doom-Iosvkem)
-(setq org-directory "~/org/")
+(setq doom-font (font-spec :family "Iosevka SS04" :size 16 :weight 'regular)
+      doom-variable-pitch-font (font-spec :family "Fira Code" :size 20))
+
+;; set light or dark theme depending on the time of the day
+(defun theme-brightess ()
+  (if
+      (and
+       (< (string-to-number (format-time-string "%H")) 16)
+       (> (string-to-number (format-time-string "%H")) 8))
+      (setq doom-theme 'doom-flatwhite)
+    (setq doom-theme 'doom-plain-dark))
+ )
+
+(theme-brightess)
+
+;; start emacs in fullscreen mode
+(toggle-frame-fullscreen)
+
 (setq display-line-numbers-type 'relative)
 
-(unless (equal "Battery status not avalible"
+(unless (equal "Battery status not avalaible"
                (battery))
   (display-battery-mode 1))
 
+;; Display current time
+(display-time-mode 1)
+
+;; macOs specific settings
+(cond (IS-MAC
+       (setq mac-command-modifier      'meta
+             mac-option-modifier       'alt
+             mac-right-option-modifier 'alt)))
+;;
+;; lsp-ui
+(after! lsp-ui
+  (setq lsp-ui-doc-enable 1
+        lsp-ui-doc-delay 0.5
+        lsp-ui-doc-include-signature t
+        lsp-ui-doc-position 'bottom
+        lsp-ui-doc-use-childframe nil
+        lsp-ui-sideline-enable nil
+        lsp-ui-sideline-ignore-duplicate t
+        lsp-ui-peek-enable t
+        lsp-ui-flycheck-enable -1)
+)
+
+;; org-mode
+(setq org-directory "~/org/")
+
+;; org-roam
+(setq org-roam-directory "~/org/roam")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Programming Languages
+;;
+;; Clojure
+(map! :map clojure-mode-map
+      :after clojure-mode
+      :n "M-<RET>" #'cider-eval-sexp-at-point)
+
+;; Rust
 (setq rustic-lsp-server 'rust-analyzer)
 (add-hook 'before-save-hook
           (lambda ()
             (when
                 (eq 'rustic-mode major-mode)
               (lsp-format-buffer))))
-;; lsp-ui
-(after! lsp-ui
-  (setq lsp-ui-doc-enable 1
-        ;; lsp-ui-doc-glance 1
-        lsp-ui-doc-delay 0.5
-        lsp-ui-doc-include-signature t
-        lsp-ui-doc-position 'at-point
-        lsp-ui-doc-border "#fdf5b1"
-        lsp-ui-doc-max-width 65
-        lsp-ui-doc-max-height 70
-        lsp-ui-sideline-enable nil
-        lsp-ui-sideline-ignore-duplicate t
-        lsp-ui-peek-enable t
-        lsp-ui-flycheck-enable -1)
 
-  (add-to-list 'lsp-ui-doc-frame-parameters '(left-fringe . 0))
+;; Go
+(defun lsp-go-install-save-hooks ()
+  (add-hook 'before-save-hook #'lsp-format-buffer t t)
+  (add-hook 'before-save-hook #'lsp-organize-imports t t))
+(add-hook 'go-mode-hook #'lsp-go-install-save-hooks)
+(add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
 
-  ;; `C-g' to close doc
-  (advice-add #'keyboard-quit :before #'lsp-ui-doc-hide))
-
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(ansi-color-names-vector
-   ["#21242b" "#ff6c6b" "#98be65" "#ECBE7B" "#51afef" "#c678dd" "#46D9FF" "#bbc2cf"])
- '(custom-safe-themes
-   (quote
-    ("bc836bf29eab22d7e5b4c142d201bcce351806b7c1f94955ccafab8ce5b20208" "0cb1b0ea66b145ad9b9e34c850ea8e842c4c4c83abe04e37455a1ef4cc5b8791" "912cac216b96560654f4f15a3a4d8ba47d9c604cbc3b04801e465fb67a0234f0" default)))
- '(fci-rule-color "#5B6268")
- '(jdee-db-active-breakpoint-face-colors (cons "#1B2229" "#51afef"))
- '(jdee-db-requested-breakpoint-face-colors (cons "#1B2229" "#98be65"))
- '(jdee-db-spec-breakpoint-face-colors (cons "#1B2229" "#3f444a"))
- '(objed-cursor-color "#ff6c6b")
- '(pdf-view-midnight-colors (cons "#bbc2cf" "#282c34"))
- '(rustic-ansi-faces
-   ["#282c34" "#ff6c6b" "#98be65" "#ECBE7B" "#51afef" "#c678dd" "#46D9FF" "#bbc2cf"])
- '(vc-annotate-background "#282c34")
- '(vc-annotate-color-map
-   (list
-    (cons 20 "#98be65")
-    (cons 40 "#b4be6c")
-    (cons 60 "#d0be73")
-    (cons 80 "#ECBE7B")
-    (cons 100 "#e6ab6a")
-    (cons 120 "#e09859")
-    (cons 140 "#da8548")
-    (cons 160 "#d38079")
-    (cons 180 "#cc7cab")
-    (cons 200 "#c678dd")
-    (cons 220 "#d974b7")
-    (cons 240 "#ec7091")
-    (cons 260 "#ff6c6b")
-    (cons 280 "#cf6162")
-    (cons 300 "#9f585a")
-    (cons 320 "#6f4e52")
-    (cons 340 "#5B6268")
-    (cons 360 "#5B6268")))
- '(vc-annotate-very-old-color nil))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; org
+(setq org-superstar-headline-bullets-list '("⁖" "◉" "○" "✸" "✿"))
+(after! org
+  (setq
+   org-todo-keywords '((sequence "TODO(t)" "INPROGRESS(i)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)"))
+   org-todo-keyword-faces
+   '(("TODO" :foreground "#7c7c75" :weight normal :underline t)
+     ("WAITING" :foreground "#9f7efe" :weight normal :underline t)
+     ("INPROGRESS" :foreground "#0098dd" :weight normal :underline t)
+     ("DONE" :foreground "#50a14f" :weight normal :underline t)
+     ("CANCELLED" :foreground "#ff6480" :weight normal :underline t))
+   org-priority-faces '((65 :foreground "#e45649")
+                        (66 :foreground "#da8548")
+                        (67 :foreground "#0098dd"))
+   ))
