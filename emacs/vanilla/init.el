@@ -10,33 +10,36 @@
 (setq inhibit-startup-message t)
 
 ;;
-(setq user-full-name "Nino Paparo"
-      user-mail-address "")
+(setq user-full-name "Nino Paparo")
 
-;; avoid opening UI pop up dialogs
+;; Avoid opening UI pop up dialogs
 (setq use-dialog-box nil)
 
 ;; Adjust garbage collection thresholds during startup, and thereafter
-
 (let ((normal-gc-cons-threshold (* 20 1024 1024))
       (init-gc-cons-threshold (* 128 1024 1024)))
   (setq gc-cons-threshold init-gc-cons-threshold)
   (add-hook 'emacs-startup-hook
             (lambda () (setq gc-cons-threshold normal-gc-cons-threshold))))
 
-;;
-(scroll-bar-mode -1)
-(tool-bar-mode -1)
-(tooltip-mode -1)
-(set-fringe-mode 10)
-(menu-bar-mode -1)
+;; Disable UI elements
+(defun disable-all-ui-elements ()
+  "DISABLE ALL UI ELEMENTS."
+  (scroll-bar-mode -1)
+  (tool-bar-mode -1)
+  (tooltip-mode -1)
+  (set-fringe-mode 10)
+  (menu-bar-mode -1))
+
+(disable-all-ui-elements)
 
 ;; Avoid creating backup files
 (setq make-backup-files nil)
 
 ;; Automatically Reload Files When They Change On Disk
 (global-auto-revert-mode 1)
-(setq auto-revert-verbose nil)
+
+(setq-default auto-revert-verbose nil)
 
 ;; Use y/n instead of full yes/no for confirmation messages
 (fset 'yes-or-no-p 'y-or-n-p)
@@ -61,7 +64,8 @@
 (if (eq window-system 'ns)
     ;; http://www.gnu.org/software/emacs/manual/html_node/elisp/Window-Systems.html
     ;; macOs specific settings
-    (setq mac-command-modifier      'meta
+    (setq-default
+          mac-command-modifier      'meta
 	  ac-option-modifier        'alt
 	  mac-right-option-modifier 'alt)
   (message "keeping default M-x keybindings"))
@@ -69,14 +73,8 @@
 ;; Make ESC quit prompts
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
-;; Modeline Settings
-(defun show-battery-status()
-  (unless (equal "Battery status not available"
-		 (battery))
-    (display-battery-mode 1)))
-
-;;
-(show-battery-status)
+(unless (equal "Battery status not available" (battery))
+  (display-battery-mode 1))
 
 (defun open-config-file()
   "Open init.el ."
@@ -97,6 +95,11 @@
   (transpose-lines 1)
   (forward-line -1)
   (indent-according-to-mode))
+
+(defun format-and-organize-imports-before-save ()
+  "Format the buffer and organize imports before saving."
+  (lsp-format-buffer)
+  (lsp-organize-imports))
 
 ;; Display current time
 (display-time-mode 1)
@@ -144,10 +147,7 @@
 	completion-category-overrides '((file (styles partial-completion)))))
 
 (use-package marginalia
-  :bind (("M-A" . marginalia-cycle)
-	 :map minibuffer-local-map
-	 ("M-A" . marginalia-cycle))
-  :init
+  :config
   (marginalia-mode))
 
 ;;
@@ -195,89 +195,6 @@
   (evil-collection-init))
 
 ;;
-(use-package general
-  :config
-  (general-evil-setup t)
-
-  (general-create-definer np/org-mode
-    :prefix "SPC")
-
-  (general-define-key
-   :states '(normal visual)
-   "C-x C-f" 'counsel-find-file)
-
-  (general-define-key
-   :states '(normal visual)
-   :keymaps '(clojure-mode-map)
-   "M-<return>" 'cider-eval-sexp-at-point)
-
-  (general-define-key
-   "M-<up>" 'move-line-up
-   "M-<down>" 'move-line-down)
-
-  (general-define-key
-   :states '(normal visual)
-   :keymaps '(clojure-mode-map emacs-lisp-mode-map go-mode-map rustic-mode-map)
-   "M-l" 'lispyville->
-   "M-h" 'lispyville-<
-   "TAB" 'evil-jump-item)
-
-  (general-create-definer np/leader-keys
-    :prefix "SPC")
-
-  (np/leader-keys
-    :states 'normal
-    :keymaps 'override
-
-    "bb" '(ibuffer :which-key "ibuffer")
-    "bk" '(kill-this-buffer :which-key "kill this buffer")
-
-    "cc" 'evilnc-comment-or-uncomment-lines
-    "cw" '(whitespace-mode :which-key "show whitespace")
-
-    "h"  '(:ignore t :which-key "helper functions")
-    "ho"  '(describe-symbol :which-key "describe symbol")
-    "ht" '(load-theme :which-key "choose theme")
-
-    ;; magit
-    "g"  '(:ignore t :which-key "magit")
-    "gs" '(magit-status :which-key "magit-status")
-
-    ;; org-mode
-    "m" '(:ignore t :which-key "org-mode")
-    "ma" '(org-agenda :which-key "open org-agenda")
-    "ms" '(org-occur-in-agenda-files :which-key "search in agenda")
-
-    ;; Window Management
-    "w"  '(:ignore t :which-key "window management")
-    "ws" '(evil-window-split :which-key "horizontal split")
-    "wv" '(evil-window-vsplit :which-key "vertical split")
-    "wj" '(evil-window-down :which-key "move down")
-    "wk" '(evil-window-up :which-key "move up")
-    "wh" '(evil-window-left :which-key "move left")
-    "wl" '(evil-window-right :which-key "move right")
-    "wo" '(delete-other-windows :which-key "delete other windows")
-    "ww" '(toggle-frame-fullscreen :which-key "toggle fullscreen")
-
-    "f"  '(:ignore t :which-key "config files")
-    "fp"  '(open-config-file :which-key "open config file")
-
-    "o"  '(:ignore t :which-key "open")
-    "oe" '(eshell :which-key "eshell")
-    "op" '(list-packages :which-key "list-packages")
-    "ot" '(treemacs :which-key "treemacs")
-
-    "pp" '(projectile-switch-project :which-key "projectile")
-    "pe" '(eval-buffer :which-key "eval buffer")
-
-    "qq" '(evil-quit :which-key "quit emacs")
-
-    "t" '(vterm :which-key "vterm")
-
-    "/"   '(swiper :which-key "swiper")
-    "SPC" '(dired-at-point :which-key "dired")))
-
-;;
 (use-package doom-themes
   :ensure t
   :config
@@ -286,7 +203,7 @@
 	doom-themes-enable-italic t)) ; if nil, italics is universally disabled
 
 (if (eq window-system 'ns)
-    (load-theme 'doom-solarized-dark-high-contrast t)
+    (load-theme 'doom-snazzy t)
   (load-theme 'doom-solarized-light t))
 
 ;; Enable flashing mode-line on errors
@@ -294,12 +211,6 @@
 
 ;; Enable custom neotree theme (all-the-icons must be installed!)
 (doom-themes-neotree-config)
-
-;; or for treemacs users
-(setq doom-themes-treemacs-theme "doom-atom")
-
-;; use "doom-colors" for less minimal icon theme
-(doom-themes-treemacs-config)
 
 ;; Corrects (and improves) org-mode's native fontification.
 (doom-themes-org-config)
@@ -321,23 +232,13 @@
 ;; Programming Modes
 
 ;; Set Type Of Line Numbering (Global Variable)
-(setq display-line-numbers-type 'relative)
+(setq-default display-line-numbers-type 'relative)
 
 ;;
 (use-package rainbow-delimiters
   :ensure t
   :config
   (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
-
-(use-package lispy
-  :ensure t)
-
-(use-package lispyville
-  :init
-  (general-add-hook '(emacs-lisp-mode-hook lisp-mode-hook) #'lispyville-mode)
-  (general-add-hook '(clojure-mode-hook lisp-mode-hook) #'lispyville-mode)
-  :config
-  (lispyville-set-key-theme '(operators c-w additional)))
 
 ;; Activate line numbering in programming modes
 (add-hook 'prog-mode-hook 'display-line-numbers-mode)
@@ -384,9 +285,7 @@
 (use-package org-roam
   :ensure t
   :custom
-  (org-roam-directory "~/org/roam")
-  :config
-  (org-roam-setup))
+  (org-roam-directory "~/org/roam"))
 
 ;;
 (use-package flycheck
@@ -396,27 +295,25 @@
 
 (use-package lsp-mode
   :ensure t
-  :hook
-  (go-mode . lsp-deferred)
-  (clojure-mode . lsp-deferred)
-  (rustic-mode . lsp-deferred)
-  (lsp-mode . lsp-enable-which-key-integration)
+  :hook ((go-mode clojure-mode rustic-mode) . lsp-deferred)
   :commands (lsp lsp-deferred)
-  :config (progn
-	    (setq lsp-prefer-flymake nil)
-	    (setq lsp-headerline-breadcrumb-enable nil)
-	    (setq lsp-lens-enable nil)))
+  :custom
+  (lsp-prefer-flymake nil)
+  (lsp-headerline-breadcrumb-enable t)
+  (lsp-headerline-breadcrumb-icons-enable t)
+  (lsp-lens-enable t)
+  :config
+  (lsp-enable-which-key-integration)
+  (lsp-ui-mode))
 
 (use-package lsp-ui
-  :ensure t
-  :commands lsp-ui-mode
-  :config (progn
-	    ;; disable inline documentation
-	    (setq lsp-ui-sideline-enable nil)
-	    ;; disable showing docs on hover at the top of the window
-	    (setq lsp-ui-doc-enable nil)))
+  :custom
+  (lsp-ui-doc-delay 3)
+  (lsp-ui-sideline-enable nil)
+  (lsp-ui-doc-show-with-mouse t)
+  (lsp-ui-doc-show-with-cursor t))
 
-;; Clojure
+;; ;; Clojure
 (use-package clojure-mode
   :ensure t
   :hook ((clojure-mode . lsp-deferred)
@@ -426,7 +323,6 @@
 ;; Rust
 (use-package rustic
   :ensure t
-  ;; (setq rustic-format-on-save t)
   :hook ((rustic-mode . lsp-deferred)
 	 (before-save . lsp-format-buffer)
 	 (before-save . lsp-organize-imports)))
@@ -435,10 +331,10 @@
 (use-package go-mode
   :ensure t
   :config
-  (setq-default tab-width 4)
+  (setq-default tab-width 4
+		indent-tabs-mode 1)
   :hook ((go-mode . lsp-deferred)
-	 (before-save . lsp-format-buffer)
-	 (before-save . lsp-organize-imports)))
+     (before-save . format-and-organize-imports-before-save)))
 
 (use-package corfu
   :init
@@ -487,5 +383,103 @@
 
 (use-package yaml-mode
   :ensure t)
+
+(use-package ef-themes
+  :ensure t)
+
+(use-package general
+  :ensure t
+  :config
+  (general-evil-setup t)
+
+  (general-create-definer np/org-mode
+    :prefix "SPC")
+
+  (general-define-key
+   :states '(normal visual)
+   "C-x C-f" 'counsel-find-file)
+
+  (general-define-key
+   :states '(normal visual)
+   :keymaps '(clojure-mode-map)
+   "M-<return>" 'cider-eval-sexp-at-point)
+
+  (general-define-key
+   "M-<up>" 'move-line-up
+   "M-<down>" 'move-line-down)
+
+  (general-define-key
+   :states '(normal visual)
+   :keymaps '(clojure-mode-map emacs-lisp-mode-map go-mode-map rustic-mode-map)
+   "TAB" 'evil-jump-item)
+
+  (general-create-definer np/leader-keys
+    :prefix "SPC")
+
+  (np/leader-keys
+    :states 'normal
+    :keymaps 'override
+
+    "bb" '(ibuffer :which-key "ibuffer")
+    "bk" '(kill-this-buffer :which-key "kill this buffer")
+
+    "cc" 'evilnc-comment-or-uncomment-lines
+    "cw" '(whitespace-mode :which-key "show whitespace")
+
+    "h"  '(:ignore t :which-key "helper functions")
+    "ho"  '(describe-symbol :which-key "describe symbol")
+    "ht" '(counsel-load-theme :which-key "choose theme")
+
+    ;; magit
+    "g"  '(:ignore t :which-key "magit")
+    "gs" '(magit-status :which-key "magit-status")
+
+    ;; org-mode
+    "m"   '(:ignore t :which-key "org-mode")
+    "ma"  '(org-agenda :which-key "open org-agenda")
+    "ms"  '(org-occur-in-agenda-files :which-key "search in agenda")
+
+    ;; Window Management
+    "w"   '(:ignore t :which-key "window management")
+    "ws"  '(evil-window-split :which-key "horizontal split")
+    "wv"  '(evil-window-vsplit :which-key "vertical split")
+    "wj"  '(evil-window-down :which-key "move down")
+    "wk"  '(evil-window-up :which-key "move up")
+    "wh"  '(evil-window-left :which-key "move left")
+    "wl"  '(evil-window-right :which-key "move right")
+    "wo"  '(delete-other-windows :which-key "delete other windows")
+    "ww"  '(toggle-frame-fullscreen :which-key "toggle fullscreen")
+
+    "f"   '(:ignore t :which-key "config files")
+    "fp"   '(open-config-file :which-key "open config file")
+
+    ;; LSP (Language Server Protocol)
+    "l" '(:ignore t :which-key "LSP")
+    "l c" '(lsp-execute-code-action :which-key "execute code action")
+    "l d" '(lsp-find-definition :which-key "find Definition")
+    "l n" '(lsp-rename :which-key "lsp rename")
+    "l r" '(lsp-find-references :which-key "find References")
+
+
+    "o"   '(:ignore t :which-key "open")
+    "oe"  '(eshell :which-key "eshell")
+    "op"  '(list-packages :which-key "list-packages")
+
+    "ot"  '(vterm :which-key "vterm")
+    "pp"  '(projectile-switch-project :which-key "projectile")
+    "pe"  '(eval-buffer :which-key "eval buffer")
+
+    "qq"  '(evil-quit :which-key "quit emacs")
+    "t"   '(:ignore t :which-key "treemacs management")
+    "tt"  '(treemacs :which-key "treemacs")
+
+    "/"   '(swiper :which-key "swiper")
+    "SPC" '(dired-at-point :which-key "dired")
+    "."   '(counsel-find-file :which-key "find file"))
+
+    ;; Marginalia bindings
+    (general-define-key
+     :keymaps 'minibuffer-local-map
+     "M-A" 'marginalia-cycle))
 
 ;;; init.el ends here
