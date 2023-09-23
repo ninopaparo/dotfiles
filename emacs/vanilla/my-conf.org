@@ -1,0 +1,728 @@
+#+AUTHOR: Nino Paparo
+* General Settings
+** exec-path-from-shell
+#+BEGIN_SRC emacs-lisp
+  (use-package exec-path-from-shell
+    :ensure t
+    :config
+    (exec-path-from-shell-initialize))
+#+END_SRC
+** Evil
+*** evil-mode
+#+BEGIN_SRC emacs-lisp
+  (use-package evil
+    :ensure t
+    :init
+    (setq evil-want-keybinding nil)
+    :config
+    (evil-mode 1))
+#+END_SRC
+*** evil-nerd-commenter
+#+BEGIN_SRC emacs-lisp
+  (use-package evil-nerd-commenter)
+#+END_SRC
+*** evil-collection
+#+BEGIN_SRC emacs-lisp
+  (use-package evil-collection
+    :after evil
+    :ensure t
+    :config
+    (evil-collection-init))
+#+END_SRC
+
+** Key Bindings
+*** ESC quit prompts
+#+BEGIN_SRC emacs-lisp
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+#+END_SRC
+*** Manage Mac/Linux specific settings
+#+BEGIN_SRC emacs-lisp
+(if (eq window-system 'ns)
+    ;; http://www.gnu.org/software/emacs/manual/html_node/elisp/Window-Systems.html
+    ;; macOs specific settings
+    (setq-default
+	  mac-command-modifier      'meta
+	  ac-option-modifier        'alt
+	  mac-right-option-modifier 'alt)
+  (message "keeping default M-x keybindings"))
+#+END_SRC
+*** general.el
+#+BEGIN_SRC emacs-lisp
+  (use-package general
+    :ensure t
+    :config
+    (general-evil-setup t)
+
+    (general-create-definer np/org-mode
+      :prefix "SPC")
+
+    (general-define-key
+     :states '(normal visual)
+     "C-x C-f" 'counsel-find-file)
+
+    (general-define-key
+     :states '(normal visual)
+     :keymaps '(emacs-lisp-mode-map)
+     "M-<return>" 'eval-last-sexp)
+
+    (general-define-key
+     :states '(normal visual)
+     :keymaps '(clojure-mode-map)
+     "M-<return>" 'cider-eval-sexp-at-point)
+
+    (general-define-key
+     "M-<up>" 'move-line-up
+     "M-<down>" 'move-line-down)
+
+    (general-define-key
+     :states '(normal visual)
+     :keymaps '(clojure-mode-map emacs-lisp-mode-map go-mode-map rustic-mode-map)
+     "TAB" 'evil-jump-item)
+
+    (general-create-definer np/leader-keys
+      :prefix "SPC")
+
+    (np/leader-keys
+      :states 'normal
+      :keymaps 'override
+
+      ;; Manage buffers
+      "bb" '(ibuffer :which-key "ibuffer")
+      "bk" '(kill-this-buffer :which-key "kill this buffer")
+
+      "be"  '(eval-buffer :which-key "eval buffer")
+
+      "cc" 'evilnc-comment-or-uncomment-lines
+      "cw" '(whitespace-mode :which-key "show whitespace")
+
+      "h"  '(:ignore t :which-key "helper functions")
+      "ho"  '(describe-symbol :which-key "describe symbol")
+      "ht" '(counsel-load-theme :which-key "choose theme")
+
+      ;; magit
+      "g"  '(:ignore t :which-key "magit")
+      "gs" '(magit-status :which-key "magit-status")
+
+      ;; org-mode
+      "m"   '(:ignore t :which-key "org-mode")
+      "ma"  '(org-agenda :which-key "open org-agenda")
+      "ms"  '(org-occur-in-agenda-files :which-key "search in agenda")
+      "mrf" '(org-roam-node-find :which-key "org roam node find")
+      "mri" '(org-roam-node-insert :which-key "org roam node insert")
+
+      ;; Window Management
+      "w"   '(:ignore t :which-key "window management")
+      "ws"  '(evil-window-split :which-key "horizontal split")
+      "wv"  '(evil-window-vsplit :which-key "vertical split")
+      "wj"  '(evil-window-down :which-key "move down")
+      "wk"  '(evil-window-up :which-key "move up")
+      "wh"  '(evil-window-left :which-key "move left")
+      "wl"  '(evil-window-right :which-key "move right")
+      "wo"  '(delete-other-windows :which-key "delete other windows")
+      "ww"  '(toggle-frame-fullscreen :which-key "toggle fullscreen")
+
+      "f"   '(:ignore t :which-key "config files")
+      "fp"   '(open-config-file :which-key "open config file")
+
+      ;; LSP (Language Server Protocol)
+      "l" '(:ignore t :which-key "LSP")
+      "l c" '(lsp-execute-code-action :which-key "execute code action")
+      "l d" '(lsp-find-definition :which-key "find Definition")
+      "l n" '(lsp-rename :which-key "lsp rename")
+      "l r" '(lsp-find-references :which-key "find References")
+
+
+      "o"   '(:ignore t :which-key "open")
+      "oe"  '(eshell :which-key "eshell")
+      "op"  '(list-packages :which-key "list-packages")
+
+      "ot"  '(vterm-toggle :which-key "vterm-toggle")
+
+      "p"   '(:ignore t :which-key "projectile")
+      "p p"  '(projectile-switch-project :which-key "switch project")
+      "p k"  '(projectile-kill-buffers :which-key "kill project buffers")
+
+      "qq"  '(evil-quit :which-key "quit emacs")
+      "t"   '(:ignore t :which-key "treemacs management")
+      "tf"  '(treemacs-find-file :which-key "treemacs find file")
+      "tt"  '(treemacs-select-window :which-key "treemacs select window")
+
+      "s"   '(swiper :which-key "swiper")
+      "SPC" '(dired-at-point :which-key "dired")
+      "."   '(counsel-find-file :which-key "find file"))
+
+    ;; Marginalia bindings
+    (general-define-key
+     :keymaps 'minibuffer-local-map
+     "M-A" 'marginalia-cycle))
+
+#+END_SRC
+
+** Files
+*** Dired
+#+BEGIN_SRC emacs-lisp
+  (use-package dired
+    :hook (dired-mode . dired-hide-details-mode)
+    :ensure nil
+    :commands (dired dired-jump))
+#+END_SRC
+*** Avoid creating backup files
+#+BEGIN_SRC emacs-lisp
+(setq make-backup-files nil)
+#+END_SRC
+*** Automatically Reload Files When They Change On Disk
+#+BEGIN_SRC emacs-lisp
+(global-auto-revert-mode 1)
+(setq-default auto-revert-verbose nil)
+#+END_SRC
+*** Persist history over Emacs restarts.
+#+BEGIN_SRC emacs-lisp
+  (use-package savehist
+    :init
+    (savehist-mode))
+#+END_SRC
+*** Vertico sorts by history position
+#+BEGIN_SRC emacs-lisp
+  (use-package vertico
+    :init
+    (vertico-mode))
+#+END_SRC
+** Autocomplete
+*** flycheck
+#+BEGIN_SRC emacs-lisp
+  (use-package flycheck
+    :ensure t
+    :init (global-flycheck-mode))
+#+END_SRC
+
+*** company-mode
+#+BEGIN_SRC emacs-lisp
+(use-package company
+  :ensure t)
+#+END_SRC
+*** orderless
+#+BEGIN_SRC emacs-lisp
+  (use-package orderless
+    :init
+    (setq completion-styles '(orderless basic)
+          completion-category-defaults nil
+          completion-category-overrides '((file (styles partial-completion)))))
+#+END_SRC
+*** marginalia
+#+BEGIN_SRC emacs-lisp
+  (use-package marginalia
+    :config
+    (marginalia-mode))
+#+END_SRC
+*** corfu
+Corfu enhances in-buffer completion with a small completion popup.
+The current candidates are shown in a popup below or above the point.
+The candidates can be selected by moving up and down.
+Corfu is the minimalistic in-buffer completion counterpart of the Vertico minibuffer UI.
+#+BEGIN_SRC emacs-lisp
+  (use-package corfu
+    :init
+    (global-corfu-mode))
+;; (add-hook 'lsp-mode-hook #'corfu-mode)
+#+END_SRC
+
+*** Enable company-mode globally
+#+BEGIN_SRC emacs-lisp
+(add-hook 'after-init-hook 'global-company-mode)
+#+END_SRC
+** Search
+*** swiper
+#+BEGIN_SRC emacs-lisp
+(use-package swiper
+  :ensure t)
+#+END_SRC
+*** ivy
+#+BEGIN_SRC emacs-lisp
+(use-package ivy
+  :ensure t)
+#+END_SRC
+*** counsel
+#+BEGIN_SRC emacs-lisp
+(use-package counsel
+  :ensure t)
+#+END_SRC
+* UI
+** Emacs Window
+*** start fullscreen - not active at the moment
+#+BEGIN_SRC emacs-lisp
+  ;; (toggle-frame-fullscreen)
+#+END_SRC
+** UI utility functions
+*** open-config-file
+#+BEGIN_SRC emacs-lisp
+  (defun open-config-file()
+    "Open init.el ."
+    (interactive)(find-file "~/.emacs.d/init.el"))
+#+END_SRC
+*** move-line-up
+#+BEGIN_SRC emacs-lisp
+  ;; https://emacsredux.com/blog/2013/04/02/move-current-line-up-or-down/
+  (defun move-line-up ()
+    "Move up the current line."
+    (interactive)
+    (transpose-lines 1)
+    (forward-line -2)
+    (indent-according-to-mode))
+#+END_SRC
+*** move-line-down
+#+BEGIN_SRC emacs-lisp
+  (defun move-line-down ()
+    "Move down the current line."
+    (interactive)
+    (forward-line 1)
+    (transpose-lines 1)
+    (forward-line -1)
+    (indent-according-to-mode))
+#+END_SRC
+
+** UI Elements Management
+Let's define functions to manage UI elements such as tool-bar, scroll-bar etc.
+*** Battery
+#+BEGIN_SRC emacs-lisp
+  (unless (equal "Battery status not available" (battery))
+  (display-battery-mode 1))
+#+END_SRC
+*** Disable UI elements
+#+BEGIN_SRC emacs-lisp
+(defun disable-all-ui-elements ()
+  "DISABLE ALL UI ELEMENTS."
+  (scroll-bar-mode -1)
+  (tool-bar-mode -1)
+  (tooltip-mode -1)
+  (set-fringe-mode 10)
+  (menu-bar-mode -1))
+
+(disable-all-ui-elements)
+#+END_SRC
+** UI Messages
+Use y/n instead of full yes/no for confirmation messages
+#+BEGIN_SRC emacs-lisp
+(fset 'yes-or-no-p 'y-or-n-p)
+#+END_SRC
+** Colum delimiters
+Display the fill column as a vertical line
+#+BEGIN_SRC emacs-lisp
+(setq-default display-fill-column-indicator-column 80)
+(add-hook 'prog-mode-hook #'display-fill-column-indicator-mode)
+#+END_SRC
+
+** Fonts
+*** Utilities
+**** check-font
+#+BEGIN_SRC emacs-lisp
+(defun check-font (my-font font-height)
+  "Check if MY-FONT is installed and set to FONT-HEIGHT."
+  (when (find-font (font-spec :name my-font))
+   (set-face-attribute 'default nil :font my-font :height font-height)))
+#+END_SRC
+**** select-font
+#+BEGIN_SRC emacs-lisp
+(defun select-font (my-font font-height)
+  "Select MY-FONT and FONT-HEIGHT or default to Monaco."
+  (if
+      (check-font my-font  font-height)
+      (check-font "Monaco" 120)))
+#+END_SRC
+
+*** Unicode
+#+BEGIN_SRC emacs-lisp
+  (use-package unicode-fonts
+    :ensure t
+    :config
+    (unicode-fonts-setup))
+#+END_SRC
+*** Selected Font
+#+BEGIN_SRC emacs-lisp
+(select-font "Iosevka Fixed SS04" 140)
+#+END_SRC
+** Line Numbering
+#+BEGIN_SRC emacs-lisp
+  ;; Set Type Of Line Numbering (Global Variable)
+  (setq-default display-line-numbers-type 'relative)
+#+END_SRC
+** Icons
+*** all-the-icons
+#+BEGIN_SRC emacs-lisp
+(use-package all-the-icons
+:if (display-graphic-p))
+#+END_SRC
+*** all-the-icons-dired
+#+BEGIN_SRC emacs-lisp
+(use-package all-the-icons-dired
+:hook (dired-mode . all-the-icons-dired-mode))
+#+END_SRC
+*** nerd-icons
+#+BEGIN_SRC emacs-lisp
+  (use-package nerd-icons
+  :ensure t
+  ;; :custom
+  ;; The Nerd Font you want to use in GUI
+  ;; "Symbols Nerd Font Mono" is the default and is recommended
+  ;; but you can use any other Nerd Font if you want
+  ;; (nerd-icons-font-family "Symbols Nerd Font Mono")
+  )
+#+END_SRC
+** Display current time
+#+BEGIN_SRC emacs-lisp
+(display-time-mode 1)
+#+END_SRC
+
+** Color Themes
+*** Available themes
+**** doom-themes
+#+BEGIN_SRC emacs-lisp
+  (use-package doom-themes
+    :ensure t
+    :config
+    ;; Global settings (defaults)
+    (setq doom-themes-enable-bold nil    ; if nil, bold is universally disabled
+          doom-themes-enable-italic t ; if nil, italics is universally disabled
+          doom-themes-treemacs-theme "doom-colors"
+          ))
+  ;; Enable flashing mode-line on errors
+  (doom-themes-visual-bell-config)
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config)
+  (doom-themes-treemacs-config)
+
+#+END_SRC
+**** ef-themes
+#+BEGIN_SRC emacs-lisp
+  (use-package ef-themes
+     :ensure t)
+#+END_SRC
+*** Selected theme
+#+BEGIN_SRC emacs-lisp
+  (if (eq window-system 'ns)
+      (load-theme 'doom-spacegrey t)
+    (load-theme 'doom-solarized-light t))
+#+END_SRC
+** Modeline
+*** doom-modeline
+#+BEGIN_SRC emacs-lisp
+  (use-package doom-modeline
+    :ensure t
+    :init (doom-modeline-mode 1)
+    :custom (
+             ;; Don’t compact font caches during GC.
+             (setq inhibit-compacting-font-caches t)
+             (doom-modeline-height)))
+#+END_SRC
+
+** Dashboards
+#+BEGIN_SRC emacs-lisp
+  ;; use-package with package.el:
+  (use-package dashboard
+    :ensure t
+    :config
+    (setq dashboard-center-content t
+          ;; dashboard-filter-agenda-entry 'dashboard-no-filter-agenda
+          dashboard-startup-banner 'logo
+          )
+    (dashboard-setup-startup-hook))
+#+END_SRC
+** treemacs sidebar configuration
+*** treemacs
+#+BEGIN_SRC emacs-lisp
+  (use-package treemacs
+    :ensure t
+    :config
+    (treemacs-follow-mode t)
+    (treemacs-filewatch-mode t)
+    (setq treemacs-is-never-other-window t)
+    :defer t)
+#+END_SRC
+*** treemacs-evil
+#+BEGIN_SRC emacs-lisp
+  (use-package treemacs-evil
+    :after (treemacs evil)
+    :ensure t)
+#+END_SRC
+*** treemacs-projectile
+#+BEGIN_SRC emacs-lisp
+  (use-package treemacs-projectile
+    :after (treemacs projectile)
+    :ensure t)
+#+END_SRC
+*** treemacs-icons-dired
+#+BEGIN_SRC emacs-lisp
+  (use-package treemacs-icons-dired
+    :hook (dired-mode . treemacs-icons-dired-enable-once)
+    :ensure t)
+#+END_SRC
+*** treemacs-magit
+#+BEGIN_SRC emacs-lisp
+  (use-package treemacs-magit
+    :after (treemacs magit)
+    :ensure t)
+#+END_SRC
+*** treemacs-persp
+#+BEGIN_SRC emacs-lisp
+  (use-package treemacs-persp ;;treemacs-perspective if you use perspective.el vs. persp-mode
+    :after (treemacs persp-mode) ;;or perspective vs. persp-mode
+    :ensure t
+    :config (treemacs-set-scope-type 'Perspectives))
+#+END_SRC
+* Programming
+** LSP
+*** lsp-mode
+#+BEGIN_SRC emacs-lisp
+  (use-package lsp-mode
+    :ensure t
+    :commands (lsp lsp-deferred)
+    :custom
+    (lsp-completion-provider :none) ;; we use Corfu!
+    (lsp-prefer-flymake nil)
+    (lsp-headerline-breadcrumb-enable t)
+    (lsp-headerline-breadcrumb-icons-enable t)
+    (lsp-lens-enable t)
+    :config
+    (lsp-enable-which-key-integration)
+    (lsp-ui-mode)
+    :init
+    (defun my/lsp-mode-setup-completion ()
+      (setf (alist-get 'styles (alist-get 'lsp-capf completion-category-defaults))
+            '(orderless))) ;; Configure orderless
+    :hook
+    ((elixir-mode go-mode clojure-mode rustic-mode zig-mode html-mode) . lsp-deferred)
+    (lsp-completion-mode . my/lsp-mode-setup-completion))
+#+END_SRC
+
+*** lsp-ui
+#+BEGIN_SRC emacs-lisp
+  (use-package lsp-ui
+    :custom
+    (lsp-ui-doc-delay 3)
+    (lsp-ui-sideline-enable nil)
+    (lsp-ui-doc-show-with-mouse t)
+    (lsp-ui-doc-show-with-cursor t))
+#+END_SRC
+*** Utility functions
+**** Format buffer and organize imports before saving
+#+BEGIN_SRC emacs-lisp
+(defun format-and-organize-imports-before-save ()
+  "Format buffer and organize imports before saving."
+  (lsp-format-buffer)
+  (lsp-organize-imports))
+#+END_SRC
+
+** Debugging
+*** command-log-mode
+#+BEGIN_SRC emacs-lisp
+(use-package command-log-mode
+  :ensure t)
+#+END_SRC
+** rainbow-delimiters
+#+BEGIN_SRC emacs-lisp
+  (use-package rainbow-delimiters
+    :ensure t
+    :config
+    (add-hook 'prog-mode-hook #'rainbow-delimiters-mode))
+#+END_SRC
+** highlight-indent-guides
+#+BEGIN_SRC emacs-lisp
+  (use-package highlight-indent-guides
+     :custom (highlight-indent-guides-method #'character )
+     :hook (prog-mode . highlight-indent-guides-mode)
+     :ensure t)
+#+END_SRC
+** centaur-tabs
+#+BEGIN_SRC emacs-lisp
+  (use-package centaur-tabs
+    :ensure t
+    :config
+    (setq centaur-tabs-set-bar 'over
+          centaur-tabs-set-icons t
+          centaur-tabs-gray-out-icons 'buffer
+          centaur-tabs-height 24
+          centaur-tabs-set-modified-marker t
+          centaur-tabs-modified-marker "⁖")
+    ;; disabled by default
+    (centaur-tabs-mode 0))
+#+END_SRC
+
+** projectile
+#+BEGIN_SRC emacs-lisp
+  (use-package projectile
+    :diminish projectile-mode
+    :config (projectile-mode +1)
+    :init
+    (setq projectile-project-search-path '("~/code"))
+    (setq projectile-switch-project-action #'projectile-dired))
+#+END_SRC
+
+** yasnippet
+#+BEGIN_SRC emacs-lisp
+  (use-package yasnippet
+    :ensure t
+    :config
+    (yas-global-mode 1))
+#+END_SRC
+
+** which-key
+#+BEGIN_SRC emacs-lisp
+  (use-package which-key
+    :ensure t
+    :config (which-key-mode)
+    (setq which-key-idle-delay 0.3)
+    (setq which-key-show-remaining-keys t)
+    (setq which-key-side-window-location 'bottom))
+#+END_SRC
+** yaml
+#+BEGIN_SRC emacs-lisp
+  (use-package yaml-mode
+  :ensure t)
+#+END_SRC
+** Clojure
+*** cider
+#+BEGIN_SRC emacs-lisp
+  (use-package cider
+    :ensure t)
+#+END_SRC
+*** clojure-mode
+#+BEGIN_SRC emacs-lisp
+  (use-package clojure-mode
+  :ensure t
+  :hook ((clojure-mode . lsp-deferred)
+         (before-save . lsp-format-buffer)
+         (before-save . format-and-organize-imports-before-save)))
+#+END_SRC
+** Go
+#+BEGIN_SRC emacs-lisp
+  (use-package go-mode
+    :ensure t
+    :config
+    (setq-default tab-width 4
+                  indent-tabs-mode 1)
+    :hook ((go-mode . lsp-deferred)
+           (before-save . format-and-organize-imports-before-save)))
+#+END_SRC
+** Rust
+#+BEGIN_SRC emacs-lisp
+  (use-package rustic
+    :ensure t
+    :hook ((rustic-mode . lsp-deferred)
+           (before-save . lsp-format-buffer)
+           (before-save . format-and-organize-imports-before-save)))
+#+END_SRC
+** Zig
+#+BEGIN_SRC emacs-lisp
+  (use-package zig-mode
+    :ensure t
+    :hook ((zig-mode . lsp-deferred)
+           (before-save . lsp-format-buffer)
+           (before-save . format-and-organize-imports-before-save)))
+
+#+END_SRC
+** Elixir
+#+BEGIN_SRC emacs-lisp
+  (use-package elixir-mode
+    :ensure t)
+#+END_SRC
+* Version Control
+** git-gutter
+#+BEGIN_SRC emacs-lisp
+  (use-package git-gutter
+    :ensure t
+    :hook (prog-mode . git-gutter-mode)
+    :config
+    (setq git-gutter:update-interval 0.02))
+#+END_SRC
+** git-gutter-fringe
+#+BEGIN_SRC emacs-lisp
+  (use-package git-gutter-fringe
+    :ensure t
+    :config
+    (define-fringe-bitmap 'git-gutter-fr:added [224] nil nil '(center repeated))
+    (define-fringe-bitmap 'git-gutter-fr:modified [224] nil nil '(center repeated))
+    (define-fringe-bitmap 'git-gutter-fr:deleted [128 192 224 240] nil nil 'bottom))
+#+END_SRC
+** magit
+#+BEGIN_SRC emacs-lisp
+  (use-package magit
+    :commands (magit-status magit-get-current-branch)
+    :custom
+    (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1)
+    :defer t)
+#+END_SRC
+* Org
+** org-mode
+#+BEGIN_SRC emacs-lisp
+  (use-package org
+    :init
+    (setq org-indent-mode t
+          ;; the following shows nicer symbols in org mode files.
+          ;; e.g.
+          ;; \Lambda
+          org-toggle-pretty-entities t
+          org-return-follows-link t
+          org-startup-folded 'content
+          org-todo-keywords '((sequence "TODO(t)" "STARTED(s)" "|" "DONE(d)" "CANCELLED(c)"))
+          )
+    :config
+    (setq org-hide-emphasis-markers t
+          org-directory "~/org/"
+          org-agenda-files (list "~/org/notes.org")))
+#+END_SRC
+** enable org mode indent by default
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'org-mode-hook 'org-indent-mode)
+#+END_SRC
+** org-superstar
+#+BEGIN_SRC emacs-lisp
+  (use-package org-superstar
+    :after org
+    :hook (org-mode . org-superstar-mode)
+    :custom
+    (org-superstar-headline-bullets-list '("⁖" "◉" "○" "✸" "✿"))
+    (org-superstar-special-todo-items t))
+#+END_SRC
+** org-roam
+#+BEGIN_SRC emacs-lisp
+  (use-package org-roam
+    :ensure t
+    :custom
+    (org-roam-directory "~/org/roam"))
+#+END_SRC
+* Terminal Emulators
+** vterm
+#+BEGIN_SRC emacs-lisp
+  (use-package vterm
+    :ensure t
+    :config
+    (setq vterm-shell "/bin/zsh"))
+#+END_SRC
+** vterm-toggle
+#+BEGIN_SRC emacs-lisp
+  (use-package vterm-toggle
+    :ensure t
+    :config
+    (setq vterm-toggle-fullscreen-p nil)
+    )
+  ;; https://github.com/jixiuf/vterm-toggle#show-vterm-buffer-in-bottom-side
+  (add-to-list 'display-buffer-alist
+               '((lambda (buffer-or-name _)
+                   (let ((buffer (get-buffer buffer-or-name)))
+                     (with-current-buffer buffer
+                       (or (equal major-mode 'vterm-mode)
+                           (string-prefix-p vterm-buffer-name (buffer-name buffer))))))
+                 (display-buffer-reuse-window display-buffer-at-bottom)
+                 ;;(display-buffer-reuse-window display-buffer-in-direction)
+                 ;;display-buffer-in-direction/direction/dedicated is added in emacs27
+                 ;;(direction . bottom)
+                 ;;(dedicated . t) ;dedicated is supported in emacs27
+                 (reusable-frames . visible)
+                 (window-height . 0.3)))
+  #+END_SRC
+* Global Hooks
+** Activate line numbering in programming modes
+ #+BEGIN_SRC emacs-lisp
+   (add-hook 'prog-mode-hook 'display-line-numbers-mode)
+   (add-hook 'yaml-mode-hook 'display-line-numbers-mode)
+   (add-hook 'prog-mode-hook (lambda () (hs-minor-mode)))
+#+END_SRC
